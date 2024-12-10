@@ -21,6 +21,69 @@ class Terminal:
             "kill": self.costo_kill,
             "advance": self.costo_advance
         }
+    def terminal_fuerzaBruta(self, cadena1,cadena2):
+
+        def terminal_fuerzaBruta_aux(i, j):
+            #verificar que la solucion ya se calculo
+            #if memoria[i][j] != -1:
+            #    return memoria[i][j], pasos[i][j]
+
+            # Si llegamos al final de cadena2
+            if len(cadena2) == j:
+                if i < len(cadena1):
+                    #memoria[i][j] = self.costo_kill
+                    #pasos[i][j] = ["kill"]
+                    return self.costo_kill, ["kill"]
+                return 0, []
+
+            # Si llegamos al final de la terminal
+            if len(cadena1) == i:
+                #memoria[i][j] = len(cadena2[j:]) * self.costo_insert
+                soluci = [f"insert {x}" for x in cadena2[j:]]
+                #pasos[i][j] = soluci
+                return len(cadena2[j:]) * self.costo_insert, soluci
+
+            avanzar = float('inf')
+            paso_avance = []
+
+            # Si los caracteres son iguales, simplemente avanzamos
+            if cadena1[i] == cadena2[j]:
+                avanzar, paso_avance = terminal_fuerzaBruta_aux(i+1, j+1)
+                avanzar += self.costo_advance 
+            
+            # 1. Opción de insertar
+            costo_insertar, paso_insertar = terminal_fuerzaBruta_aux(i, j+1)
+            costo_insertar += self.costo_insert
+
+            # 2. Opción de eliminar
+            costo_eliminar, paso_eliminar = terminal_fuerzaBruta_aux(i+1, j)
+            costo_eliminar += self.costo_delete
+
+            # 3. Opción de reemplazar
+            costo_reemplazar, paso_reemplazar = terminal_fuerzaBruta_aux(i+1, j+1)
+            costo_reemplazar += self.costo_replace
+
+            # 4. Opción de matar (kill)
+            costo_kill_op, paso_kill_op = terminal_fuerzaBruta_aux(len(cadena1), j)
+            costo_kill_op += self.costo_kill
+
+            # Seleccionar la opción con el costo mínimo
+            min_costo, min_pasos = min(
+                (avanzar,["advance"] + paso_avance),
+                (costo_reemplazar, ["replace " + cadena1[i] + " with " + cadena2[j]] + paso_reemplazar),
+                (costo_insertar, ["insert " + cadena2[j]] + paso_insertar),
+                (costo_eliminar, ["delete " + cadena1[i]] + paso_eliminar),
+                (costo_kill_op, ["kill"] + paso_kill_op),
+                key=lambda x: x[0]
+            )
+
+            # Guardar la solución mínima
+            #memoria[i][j] = min_costo
+            #pasos[i][j] = min_pasos
+
+            return min_costo, min_pasos
+
+        return terminal_fuerzaBruta_aux(0,0)
 
     def terminal_dinamica(self, cadena1,cadena2):        
         def terminal_dinamica_aux(i, j, memoria, pasos):
